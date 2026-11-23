@@ -1,18 +1,18 @@
-# 🏥 SUS DataHub — Gestão Integrada e Interoperabilidade do SUS
+# SUS DataHub — Gestão Integrada e Interoperabilidade do SUS
 
 > **Plataforma web de inteligência e interoperabilidade em saúde pública que unifica dados federais, estaduais e municipais do SUS e rastreia a jornada longitudinal dos pacientes para eliminar filas e agendamentos duplicados.**
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
-O **SUS DataHub** é uma plataforma web responsiva de gestão integrada para o Sistema Único de Saúde que consolida dados públicos provenientes de APIs governamentais (IBGE e DataSUS/OpenDataSUS) com planilhas locais (CSV e JSON). 
+O [**SUS DataHub**](https://saude-mais-inteligente.github.io/SUS-DataHub/) é uma plataforma web responsiva de gestão integrada para o Sistema Único de Saúde que consolida dados públicos provenientes de APIs governamentais (IBGE e DataSUS/OpenDataSUS) com planilhas locais (CSV e JSON). 
 
 O sistema oferece filtragem territorial por região, estado e município, exibe indicadores-chave de desempenho (estabelecimentos CNES, leitos, procedimentos SIA/SIH e repasses financeiros) por meio de gráficos interativos e tabelas unificadas, além de contar com um módulo de rastreio longitudinal do paciente (CNS/RNDS) capaz de identificar e consolidar agendamentos duplicados entre as esferas municipal, estadual e federal.
 
 ---
 
-## 💡 Origem e Desenvolvimento Colaborativo
+## Origem e Desenvolvimento Colaborativo
 
 A concepção deste projeto nasceu de forma colaborativa a partir da experiência multidisciplinar de **todas as integrantes do time** — unindo conhecimentos em saúde pública, engenharia biomédica, ciência de dados, epidemiologia computacional, gestão de projetos e design de experiência do usuário (UX/UI). 
 
@@ -20,7 +20,7 @@ Para transformar a idealização em um protótipo funcional, ágil e responsivo 
 
 ---
 
-## 🎯 Justificativa e Problema Resolvido
+## Justificativa e Problema Resolvido
 
 O **SUS DataHub** ataca diretamente um dos maiores gargalos estruturais da gestão pública de saúde no Brasil: a **fragmentação de informações entre as três esferas de governo** (Municipal, Estadual e Federal) e a **duplicidade de solicitações nas filas de regulação**.
 
@@ -36,7 +36,7 @@ Na prática atual, um mesmo cidadão pode ter um procedimento ou exame solicitad
 
 ---
 
-## 🔌 Fontes de Dados e Captura
+## Fontes de Dados e Captura
 
 O sistema opera com uma arquitetura híbrida de ingestão e normalização em tempo real:
 
@@ -52,7 +52,7 @@ O sistema opera com uma arquitetura híbrida de ingestão e normalização em te
 
 ---
 
-## ⚙️ Arquitetura e Funcionamento Detalhado
+## Arquitetura e Funcionamento Detalhado
 
 O protótipo foi construído sem dependências de build pesado, garantindo leveza, portabilidade e execução direta em navegadores modernos (desktop, tablet e smartphone):
 
@@ -72,7 +72,7 @@ sus-datahub/
 
 ---
 
-## 🚀 Roadmap: Evolução e Aplicação de Inteligência Artificial
+## Roadmap: Evolução e Aplicação de Inteligência Artificial
 
 Para a próxima fase de evolução do **SUS DataHub** em ambiente produtivo, planejamos sair da análise descritiva e baseada em regras determinísticas para uma camada de **Inteligência Artificial Preditiva e Prescritiva**:
 
@@ -92,7 +92,7 @@ Para a próxima fase de evolução do **SUS DataHub** em ambiente produtivo, pla
 
 ---
 
-## 👩‍💻 Time Idealizador
+## Time Idealizador
 
 * **Aline Barreto Mendes** — [LinkedIn](https://www.linkedin.com/in/alinebarretomendes/)
 * **Anna Patricia Pachas Manrique** — [LinkedIn](https://www.linkedin.com/in/anna-patricia-pachas-manrique-414806ab/)
