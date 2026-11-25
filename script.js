@@ -1,4 +1,120 @@
 // =========================================================================
+// 0. DICIONÁRIO DE SIGLAS E TOOLTIP INTERATIVO AO PASSAR O MOUSE
+// =========================================================================
+const ACRONYM_DICTIONARY = {
+    'SUS': 'Sistema Único de Saúde — sistema público e universal de saúde do Brasil.',
+    'IBGE': 'Instituto Brasileiro de Geografia e Estatística — provedor oficial de dados territoriais (UFs e municípios).',
+    'DataSUS': 'Departamento de Informação e Informática do SUS — órgão gestor das bases nacionais de saúde.',
+    'OpenDataSUS': 'Portal de Dados Abertos do Ministério da Saúde.',
+    'CNES': 'Cadastro Nacional de Estabelecimentos de Saúde — base oficial de unidades e infraestrutura física.',
+    'SIA': 'Sistema de Informações Ambulatoriais do SUS — registra atendimentos, consultas e exames ambulatoriais.',
+    'SIH': 'Sistema de Informações Hospitalares do SUS — registra internações e procedimentos hospitalares.',
+    'FNS': 'Fundo Nacional de Saúde — gestor financeiro dos repasses federais para estados e municípios.',
+    'CNS': 'Cartão Nacional de Saúde (Cartão do SUS) — identificador único longitudinal do cidadão no SUS.',
+    'CPF': 'Cadastro de Pessoas Físicas — documento de identificação civil vinculado ao cadastro nacional.',
+    'RNDS': 'Rede Nacional de Dados em Saúde — plataforma nacional de interoperabilidade em saúde (padrão HL7 FHIR).',
+    'SISREG': 'Sistema Nacional de Regulação — plataforma web para agendamento e regulação de consultas e exames.',
+    'SER': 'Sistema Estadual de Regulação — central estadual de regulação de leitos e procedimentos especializados.',
+    'CROSS': 'Central de Regulação de Ofertas de Serviços de Saúde — sistema estadual de regulação de São Paulo.',
+    'SIGA': 'Sistema Integrado de Gestão Assistencial — plataforma municipal de agendamento e regulação em saúde.',
+    'e-SUS': 'Estratégia de Informatização do SUS — ecossistema digital de atenção primária e regulação do Ministério da Saúde.',
+    'SIGTAP': 'Sistema de Gerenciamento da Tabela de Procedimentos, Medicamentos e OPM do SUS.',
+    'UF': 'Unidade Federativa — estado brasileiro ou Distrito Federal.',
+    'SES': 'Secretaria Estadual de Saúde — órgão gestor do SUS na esfera estadual.',
+    'SMS': 'Secretaria Municipal de Saúde — órgão gestor do SUS na esfera municipal.',
+    'CSV': 'Comma-Separated Values — formato de planilha tabular com valores separados por vírgula ou ponto e vírgula.',
+    'JSON': 'JavaScript Object Notation — formato leve de intercâmbio estruturado de dados entre sistemas.',
+    'KPIs': 'Key Performance Indicators — Indicadores-Chave de Desempenho assistencial e financeiro.',
+    'EBSERH': 'Empresa Brasileira de Serviços Hospitalares — gestora da rede de hospitais universitários federais.',
+    'AMEs': 'Ambulatórios Médicos de Especialidades — unidades estaduais de diagnóstico e atenção especializada.',
+    'UPAs': 'Unidades de Pronto Atendimento — estabelecimentos de urgência e emergência 24 horas.',
+    'FHEMIG': 'Fundação Hospitalar do Estado de Minas Gerais.',
+    'SESAB': 'Secretaria da Saúde do Estado da Bahia.',
+    'SESAI': 'Secretaria de Saúde Indígena — responsável pelo subsistema de atenção à saúde indígena.',
+    'SESA': 'Secretaria de Estado da Saúde.',
+    'SESPA': 'Secretaria de Estado de Saúde Pública do Pará.',
+    'ECG': 'Eletrocardiograma — exame diagnóstico da atividade elétrica cardíaca.',
+    'MS': 'Ministério da Saúde — órgão gestor federal do SUS.'
+};
+
+function annotateAcronyms(text) {
+    if (!text) return '';
+    const keys = Object.keys(ACRONYM_DICTIONARY).sort((a, b) => b.length - a.length);
+    const escapedKeys = keys.map(k => k.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'));
+    const regex = new RegExp('(^|[^A-Za-zÀ-ÿ0-9_-])(' + escapedKeys.join('|') + ')(?=$|[^A-Za-zÀ-ÿ0-9_-])', 'g');
+    return String(text).replace(regex, function(_, prefix, match) {
+        return prefix + '<abbr data-acronym="' + match + '">' + match + '</abbr>';
+    });
+}
+
+function initAcronymTooltips() {
+    const tooltip = document.getElementById('acronymTooltip');
+    const keyEl = document.getElementById('acronymTooltipKey');
+    const descEl = document.getElementById('acronymTooltipDesc');
+    if (!tooltip || !keyEl || !descEl) return;
+
+    document.querySelectorAll('abbr[data-acronym]').forEach(el => {
+        const sigla = el.getAttribute('data-acronym');
+        if (ACRONYM_DICTIONARY[sigla] && !el.getAttribute('aria-label')) {
+            el.setAttribute('aria-label', `${sigla}: ${ACRONYM_DICTIONARY[sigla]}`);
+        }
+    });
+
+    function showAcronymTooltip(target) {
+        const sigla = target.getAttribute('data-acronym');
+        const fullDesc = ACRONYM_DICTIONARY[sigla];
+        if (!fullDesc) return;
+
+        keyEl.textContent = sigla;
+        descEl.textContent = fullDesc;
+        tooltip.classList.remove('hidden');
+
+        const rect = target.getBoundingClientRect();
+        const tipRect = tooltip.getBoundingClientRect();
+        const margin = 8;
+
+        let left = rect.left + rect.width / 2 - tipRect.width / 2;
+        left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+
+        let top = rect.top - tipRect.height - margin;
+        if (top < margin) {
+            top = rect.bottom + margin;
+        }
+
+        tooltip.style.left = `${Math.round(left)}px`;
+        tooltip.style.top = `${Math.round(top)}px`;
+    }
+
+    function hideAcronymTooltip() {
+        tooltip.classList.add('hidden');
+    }
+
+    document.addEventListener('mouseover', e => {
+        const abbr = e.target.closest('abbr[data-acronym]');
+        if (abbr) showAcronymTooltip(abbr);
+    });
+
+    document.addEventListener('mouseout', e => {
+        const abbr = e.target.closest('abbr[data-acronym]');
+        if (abbr && (!e.relatedTarget || !abbr.contains(e.relatedTarget))) {
+            hideAcronymTooltip();
+        }
+    });
+
+    document.addEventListener('focusin', e => {
+        const abbr = e.target.closest('abbr[data-acronym]');
+        if (abbr) showAcronymTooltip(abbr);
+    });
+
+    document.addEventListener('focusout', e => {
+        const abbr = e.target.closest('abbr[data-acronym]');
+        if (abbr) hideAcronymTooltip();
+    });
+
+    window.addEventListener('scroll', hideAcronymTooltip, { passive: true });
+}
+
+// =========================================================================
 // 1. ESTADO GLOBAL DA APLICAÇÃO
 // =========================================================================
 let state = {
@@ -12,6 +128,8 @@ let state = {
     currentPage: 1,
     rowsPerPage: 8,
     mobileFiltersOpen: false,
+    rndsResizeObserver: null,
+    rndsRafId: null,
     charts: {
         bar: null,
         doughnut: null,
@@ -20,16 +138,23 @@ let state = {
 };
 
 // =========================================================================
-// 2. INICIALIZAÇÃO E CHAMADAS DE API (IBGE + OPENDATASUS)
+// 2. INICIALIZAÇÃO E CHAMADAS DE API (IBGE REAL + BASE SINTÉTICA DATASUS)
 // =========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
+    initAcronymTooltips();
     setupDragAndDrop('inlineDropZone');
     setupDragAndDrop('modalDropZone');
     initCharts();
     initSparklines();
     initPatientJourneys();
     renderPatientTracking(state.selectedPatientCns);
+
+    window.addEventListener('resize', scheduleRndsFlowLinesUpdate, { passive: true });
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(scheduleRndsFlowLinesUpdate);
+    }
+
     await loadIBGEStates();
     await syncApis();
 });
@@ -138,6 +263,7 @@ async function syncApis() {
     try {
         await new Promise(resolve => setTimeout(resolve, 400));
 
+        // Base sintética estruturada em memória simulando indicadores DataSUS / SES
         state.apiRecords = [
             { id: 'FED-01', fonte: 'API_FEDERAL', esfera: 'Federal', regiao: 'Nacional', uf: 'BR', municipio: 'Brasília (Rede Federal)', unidade: 'Ministério da Saúde - Hospitais Universitários (EBSERH)', estabelecimentos: 45, leitos: 9850, atendimentos: 642000, repasse: 485000000 },
             { id: 'EST-SP', fonte: 'API_ESTADUAL', esfera: 'Estadual', regiao: 'Sudeste', uf: 'SP', municipio: 'São Paulo', unidade: 'SES-SP - Complexo Hospitalar das Clínicas & AMEs', estabelecimentos: 312, leitos: 14200, atendimentos: 1280000, repasse: 620000000 },
@@ -161,9 +287,9 @@ async function syncApis() {
         if (mobileTime) mobileTime.textContent = timeFormatted;
 
         applyFilters();
-        showToast('APIs IBGE & DataSUS sincronizadas!', 'success');
+        showToast('API IBGE sincronizada e base sintética DataSUS atualizada!', 'success');
     } catch (err) {
-        showToast('Erro ao sincronizar APIs governamentais.', 'error');
+        showToast('Erro ao sincronizar fontes de dados.', 'error');
     } finally {
         if (icon) icon.classList.remove('animate-spin');
     }
@@ -446,7 +572,7 @@ function searchPatientJourney() {
         state.selectedPatientCns = found.cns;
         renderPatientTracking(found.cns);
     } else {
-        showToast('Paciente não localizado na base RNDS/SISREG.', 'warning');
+        showToast('Paciente não localizado na base simulada RNDS/SISREG.', 'warning');
     }
 }
 
@@ -472,12 +598,97 @@ function detectMultiSphereOverlap(alocacoes) {
     return conflicts;
 }
 
+function scheduleRndsFlowLinesUpdate() {
+    if (state.rndsRafId) cancelAnimationFrame(state.rndsRafId);
+    state.rndsRafId = requestAnimationFrame(() => {
+        state.rndsRafId = null;
+        updateRndsFlowLines();
+    });
+}
+
+function updateRndsFlowLines() {
+    const diagram = document.getElementById('rndsFlowDiagram');
+    const svg = document.getElementById('rndsFlowSvg');
+    const originNode = document.getElementById('rndsOriginNode');
+    if (!diagram || !svg || !originNode) return;
+
+    // No layout mobile (< 640px) o SVG horizontal fica oculto
+    if (window.getComputedStyle(svg).display === 'none') {
+        svg.innerHTML = '';
+        return;
+    }
+
+    const diagramRect = diagram.getBoundingClientRect();
+    if (diagramRect.width === 0 || diagramRect.height === 0) return;
+
+    const originAnchor = document.getElementById('rndsOriginAnchor');
+    const originRect = originAnchor ? originAnchor.getBoundingClientRect() : originNode.getBoundingClientRect();
+
+    const startX = originAnchor
+        ? (originRect.left + originRect.width / 2) - diagramRect.left
+        : originRect.right - diagramRect.left;
+    const startY = (originRect.top + originRect.height / 2) - diagramRect.top;
+
+    const cards = diagram.querySelectorAll('.rnds-aloc-card');
+    svg.setAttribute('viewBox', `0 0 ${diagramRect.width} ${diagramRect.height}`);
+    svg.setAttribute('width', diagramRect.width);
+    svg.setAttribute('height', diagramRect.height);
+
+    const paths = [];
+    cards.forEach(card => {
+        const anchor = card.querySelector('.rnds-card-anchor');
+        const targetRect = anchor ? anchor.getBoundingClientRect() : card.getBoundingClientRect();
+
+        const endX = anchor
+            ? (targetRect.left + targetRect.width / 2) - diagramRect.left
+            : targetRect.left - diagramRect.left;
+        const endY = (targetRect.top + targetRect.height / 2) - diagramRect.top;
+
+        const color = card.dataset.lineColor || '#2DD4BF';
+        const opacity = card.dataset.lineOpacity || '0.85';
+
+        const dx = Math.max(24, endX - startX);
+        const cp1x = startX + dx * 0.52;
+        const cp2x = endX - dx * 0.48;
+
+        const d = `M ${startX.toFixed(1)} ${startY.toFixed(1)} C ${cp1x.toFixed(1)} ${startY.toFixed(1)}, ${cp2x.toFixed(1)} ${endY.toFixed(1)}, ${endX.toFixed(1)} ${endY.toFixed(1)}`;
+
+        // Brilho suave de fundo + curva principal exatamente alinhada aos centros das âncoras
+        paths.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="5" stroke-opacity="0.14" stroke-linecap="round" />`);
+        paths.push(`<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-opacity="${opacity}" stroke-linecap="round" />`);
+    });
+
+    svg.innerHTML = paths.join('');
+}
+
+function observeRndsFlowDiagram() {
+    if (state.rndsResizeObserver) {
+        state.rndsResizeObserver.disconnect();
+        state.rndsResizeObserver = null;
+    }
+
+    const diagram = document.getElementById('rndsFlowDiagram');
+    if (!diagram || typeof ResizeObserver === 'undefined') return;
+
+    state.rndsResizeObserver = new ResizeObserver(() => {
+        scheduleRndsFlowLinesUpdate();
+    });
+
+    state.rndsResizeObserver.observe(diagram);
+    const originNode = document.getElementById('rndsOriginNode');
+    if (originNode) state.rndsResizeObserver.observe(originNode);
+    diagram.querySelectorAll('.rnds-aloc-card').forEach(card => {
+        state.rndsResizeObserver.observe(card);
+    });
+}
+
 function renderPatientTracking(cns) {
     const container = document.getElementById('patientTrackingResult');
     const patient = state.patientJourneys.find(p => p.cns === cns) || state.patientJourneys[0];
     if (!patient) return;
 
     const conflicts = detectMultiSphereOverlap(patient.alocacoes);
+    const conflictingCodes = new Set(conflicts.map(c => c.codigoSigtap));
     const hasConflict = conflicts.length > 0;
 
     const actionButton = hasConflict ? `
@@ -512,33 +723,47 @@ function renderPatientTracking(cns) {
 
     const stackedNodesHtml = patient.alocacoes.map((aloc, idx) => {
         const isConsolidated = aloc.status.includes('Consolidado');
-        const isFirstConflict = hasConflict && idx === 0;
+        const isConflicting = conflictingCodes.has(aloc.codigoSigtap);
+        const isFirstConflict = isConflicting && idx === 0;
 
         let cardStyle = 'bg-[#213237]/90 border-white/10 text-slate-200';
         let iconBoxStyle = 'bg-white/10 text-teal-300';
         let titleText = `${aloc.esfera} • ${aloc.unidade}`;
+        let dotClass = 'bg-teal-400 ring-4 ring-teal-500/20';
+        let lineColor = '#2DD4BF';
+        let lineOpacity = '0.8';
 
         if (isConsolidated) {
             cardStyle = 'bg-gradient-to-r from-emerald-500 to-teal-600 border-emerald-300/70 text-white shadow-lg shadow-emerald-900/40';
             iconBoxStyle = 'bg-white/20 text-white';
             titleText = `Consolidado: ${aloc.unidade}`;
+            dotClass = 'bg-emerald-400 ring-4 ring-emerald-500/25';
+            lineColor = '#10B981';
+            lineOpacity = '0.9';
         } else if (isFirstConflict) {
             cardStyle = 'bg-[#26393F] border-teal-400/50 text-white shadow-md';
             iconBoxStyle = 'bg-teal-500/20 text-teal-300';
+            dotClass = 'bg-rose-400 ring-4 ring-rose-500/25';
+            lineColor = '#F43F5E';
+            lineOpacity = '0.9';
+        } else if (isConflicting) {
+            dotClass = 'bg-rose-400 ring-4 ring-rose-500/20';
+            lineColor = '#FB7185';
+            lineOpacity = '0.82';
         }
 
         return `
-            <div class="relative flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border ${cardStyle} transition">
-                <span class="hidden sm:block w-2.5 h-2.5 rounded-full ${hasConflict ? (idx === 0 ? 'bg-rose-400 ring-4 ring-rose-500/20' : 'bg-teal-400 ring-4 ring-teal-500/20') : 'bg-emerald-400 ring-4 ring-emerald-500/20'} -ml-4.5 shrink-0"></span>
+            <div class="rnds-aloc-card relative flex items-center justify-between gap-2.5 pl-4 pr-3 py-2.5 rounded-xl border ${cardStyle} transition" data-line-color="${lineColor}" data-line-opacity="${lineOpacity}">
+                <span class="rnds-card-anchor hidden sm:block absolute -left-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${dotClass} border border-[#172428] z-20"></span>
                 
                 <div class="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
                     <div class="w-7 h-7 rounded-lg ${iconBoxStyle} flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
                         <i data-lucide="${sphereIcons[aloc.esfera] || 'hospital'}" class="w-3.5 h-3.5"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-xs font-bold leading-snug break-words">${titleText}</p>
+                        <p class="text-xs font-bold leading-snug break-words">${annotateAcronyms(titleText)}</p>
                         <p class="text-[11px] ${isConsolidated ? 'text-emerald-50' : 'text-slate-400'} mt-0.5">
-                            ${aloc.dataAgendada} (${aloc.horario}) • ${aloc.sistema}
+                            ${aloc.dataAgendada} (${aloc.horario}) • ${annotateAcronyms(aloc.sistema)}
                         </p>
                     </div>
                 </div>
@@ -555,7 +780,7 @@ function renderPatientTracking(cns) {
                 </div>
                 <div class="min-w-0">
                     <h3 class="text-sm font-bold text-white leading-tight truncate">${patient.nome}</h3>
-                    <p class="text-[11px] font-mono text-slate-400 mt-0.5 truncate">CNS: ${patient.cns}</p>
+                    <p class="text-[11px] font-mono text-slate-400 mt-0.5 truncate"><abbr data-acronym="CNS">CNS</abbr>: ${patient.cns}</p>
                 </div>
             </div>
             ${actionButton}
@@ -563,16 +788,20 @@ function renderPatientTracking(cns) {
 
         ${alertBanner}
 
-        <!-- Diagrama Visual de Fluxo (Vertical no Mobile, Horizontal com SVG no Desktop) -->
-        <div class="mt-3 grid grid-cols-1 sm:grid-cols-12 gap-0 sm:gap-3 items-center relative">
+        <!-- Diagrama Visual de Fluxo (Vertical no Mobile, Horizontal com SVG dinâmico no Desktop/Tablet) -->
+        <div id="rndsFlowDiagram" class="mt-3 grid grid-cols-1 sm:grid-cols-12 gap-0 sm:gap-3 items-center relative">
+            <!-- Camada SVG Responsiva calculada dinamicamente a partir das âncoras reais -->
+            <svg id="rndsFlowSvg" class="hidden sm:block absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible" aria-hidden="true"></svg>
+
             <!-- Nó de Origem (Solicitação / CNS) -->
-            <div class="sm:col-span-4 flex flex-row sm:flex-col items-center justify-between sm:justify-center text-left sm:text-center p-3 rounded-xl bg-[#111B1E] border border-white/10 relative z-10 gap-3 sm:gap-1">
+            <div id="rndsOriginNode" class="sm:col-span-4 flex flex-row sm:flex-col items-center justify-between sm:justify-center text-left sm:text-center p-3 rounded-xl bg-[#111B1E] border border-white/10 relative z-10 gap-3 sm:gap-1">
+                <span id="rndsOriginAnchor" class="hidden sm:block absolute -right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${hasConflict ? 'bg-rose-400 ring-4 ring-rose-500/25' : 'bg-emerald-400 ring-4 ring-emerald-500/25'} border border-[#111B1E] z-20"></span>
                 <div class="flex items-center gap-2.5 sm:flex-col sm:gap-1.5">
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full ${hasConflict ? 'bg-rose-500/20 border-rose-400/50 text-rose-300' : 'bg-teal-500/20 border-teal-400/50 text-teal-300'} border flex items-center justify-center shadow-inner shrink-0">
                         <i data-lucide="radio" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </div>
                     <div>
-                        <span class="text-[11px] font-bold text-slate-200 block">SIGTAP ${patient.alocacoes[0]?.codigoSigtap || ''}</span>
+                        <span class="text-[11px] font-bold text-slate-200 block"><abbr data-acronym="SIGTAP">SIGTAP</abbr> ${patient.alocacoes[0]?.codigoSigtap || ''}</span>
                         <span class="text-[10px] text-slate-400 block">${patient.municipioResidencia}</span>
                     </div>
                 </div>
@@ -587,22 +816,18 @@ function renderPatientTracking(cns) {
                 <i data-lucide="arrow-down" class="w-3.5 h-3.5 ${hasConflict ? 'text-rose-400' : 'text-emerald-400'} -my-0.5"></i>
             </div>
 
-            <!-- Conectores Curvos SVG Exclusivos para Desktop/Tablet (>= 640px) -->
-            <div class="hidden sm:block sm:col-span-1 h-full relative">
-                <svg class="w-full h-36 overflow-visible" viewBox="0 0 40 140" preserveAspectRatio="none">
-                    <path d="M 0 70 C 20 70, 20 22, 40 22" fill="none" stroke="${hasConflict ? '#F43F5E' : '#10B981'}" stroke-width="2.2" stroke-opacity="0.85" />
-                    ${patient.alocacoes.length > 1 ? `<path d="M 0 70 C 20 70, 20 70, 40 70" fill="none" stroke="${hasConflict ? '#F43F5E' : '#2DD4BF'}" stroke-width="2" stroke-opacity="0.75" />` : ''}
-                    ${patient.alocacoes.length > 2 ? `<path d="M 0 70 C 20 70, 20 118, 40 118" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-opacity="0.65" />` : ''}
-                </svg>
-            </div>
+            <!-- Espaçador Horizontal para as Curvas SVG (>= 640px) -->
+            <div class="hidden sm:block sm:col-span-1" aria-hidden="true"></div>
 
             <!-- Lista de Esferas Conectadas -->
-            <div class="sm:col-span-7 space-y-2">
+            <div class="sm:col-span-7 space-y-2.5 relative z-10">
                 ${stackedNodesHtml}
             </div>
         </div>
     `;
     lucide.createIcons();
+    observeRndsFlowDiagram();
+    scheduleRndsFlowLinesUpdate();
 }
 
 function resolveDuplicateAllocations(cns, codigoSigtap) {
@@ -714,9 +939,9 @@ function renderTable() {
     document.getElementById('tableCountBadge').textContent = `${total} ${total === 1 ? 'registro' : 'registros'}`;
 
     if (total === 0) {
-        const emptyMsg = `Nenhum dado encontrado para os filtros selecionados. Tente limpar os filtros ou importar uma planilha.`;
-        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">${emptyMsg}</td></tr>`;
-        mobileList.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">${emptyMsg}</div>`;
+        const emptyMsg = `Nenhum dado encontrado para os filtros selecionados. Na base sintética demonstrativa estão cadastrados apenas polos e capitais selecionados; limpe os filtros ou importe uma planilha municipal.`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 px-4 text-center text-slate-500">${emptyMsg}</td></tr>`;
+        mobileList.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">${emptyMsg}</div>`;
         document.getElementById('paginationInfo').textContent = 'Mostrando 0 de 0 registros';
         document.getElementById('btnPrevPage').disabled = true;
         document.getElementById('btnNextPage').disabled = true;
@@ -730,10 +955,10 @@ function renderTable() {
     // 1. Renderização Desktop (Tabela)
     tbody.innerHTML = pageItems.map(item => {
         let badgeClass = 'bg-cyan-500/15 text-cyan-900 border-cyan-500/30';
-        let fonteLabel = 'API Federal';
+        let fonteLabel = 'Sintético Federal';
         if (item.fonte === 'API_ESTADUAL') {
             badgeClass = 'bg-teal-500/15 text-teal-900 border-teal-500/30';
-            fonteLabel = 'API Estadual';
+            fonteLabel = 'Sintético Estadual';
         } else if (item.fonte === 'UPLOAD_LOCAL') {
             badgeClass = 'bg-amber-500/15 text-amber-900 border-amber-500/30';
             fonteLabel = 'Upload Local';
@@ -750,7 +975,7 @@ function renderTable() {
                     <span class="font-bold text-slate-800">${item.uf}</span> <span class="text-[11px] text-slate-400">(${item.regiao})</span>
                 </td>
                 <td class="py-2.5 px-4 font-semibold text-slate-800">${item.municipio}</td>
-                <td class="py-2.5 px-4 text-slate-600 max-w-xs truncate" title="${item.unidade}">${item.unidade}</td>
+                <td class="py-2.5 px-4 text-slate-600 max-w-xs truncate" title="${item.unidade}">${annotateAcronyms(item.unidade)}</td>
                 <td class="py-2.5 px-4 text-right font-medium text-slate-700">${item.leitos.toLocaleString('pt-BR')}</td>
                 <td class="py-2.5 px-4 text-right font-medium text-slate-700">${item.atendimentos.toLocaleString('pt-BR')}</td>
                 <td class="py-2.5 px-4 text-right font-bold text-[#075966]">${item.repasse.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}</td>
@@ -761,10 +986,10 @@ function renderTable() {
     // 2. Renderização Mobile (Cards estruturados sem rolagem horizontal)
     mobileList.innerHTML = pageItems.map(item => {
         let badgeClass = 'bg-cyan-500/15 text-cyan-900 border-cyan-500/30';
-        let fonteLabel = 'Federal';
+        let fonteLabel = 'Sintético Fed.';
         if (item.fonte === 'API_ESTADUAL') {
             badgeClass = 'bg-teal-500/15 text-teal-900 border-teal-500/30';
-            fonteLabel = 'Estadual';
+            fonteLabel = 'Sintético Est.';
         } else if (item.fonte === 'UPLOAD_LOCAL') {
             badgeClass = 'bg-amber-500/15 text-amber-900 border-amber-500/30';
             fonteLabel = 'Upload CSV';
@@ -782,7 +1007,7 @@ function renderTable() {
                 </div>
                 <div>
                     <h4 class="text-xs font-extrabold text-slate-800">${item.municipio}</h4>
-                    <p class="text-[11px] text-slate-600 leading-snug mt-0.5">${item.unidade}</p>
+                    <p class="text-[11px] text-slate-600 leading-snug mt-0.5">${annotateAcronyms(item.unidade)}</p>
                 </div>
                 <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 text-center">
                     <div class="bg-white/70 rounded-lg p-1.5">

@@ -90,3 +90,15 @@ body {
 .eq-bar:nth-child(4) {
     animation-delay: 0.15s;
 }
+
+/* Indicador visual discreto para siglas com descrição ao passar o mouse */
+abbr[data-acronym] {
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    cursor: help;
+}
+
+abbr[data-acronym]:hover {
+    opacity: 0.9;
+}
